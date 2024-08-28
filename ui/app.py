@@ -1,48 +1,52 @@
+import streamlit as st
 import sys
 import os
 
-# Add the parent directory of 'ui' to the Python path
+# Add the parent directory of the 'tasks' folder to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import streamlit as st
-from tasks import task_manager
-from speech import speech_to_text as stt
-from speech import text_to_speech as tts
+from tasks.task_manager import add_task, list_tasks, clear_tasks
+import speech_recognition as sr
 
-def add_task():
-    task_description = st.text_input("Enter task description:")
-    if st.button("Add Task"):
-        if task_description:
-            response = task_manager.add_task(task_description)
-            st.success(response)
-        else:
-            st.warning("Please enter a task description.")
+def voice_recognition():
+    st.write("## Voice Recognition")
+    if st.button('Start Listening'):
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.write("Listening...")
+            audio = recognizer.listen(source)
+            try:
+                text = recognizer.recognize_google(audio)
+                st.write(f"You said: {text}")
+            except sr.UnknownValueError:
+                st.write("Sorry, I did not understand that.")
+            except sr.RequestError:
+                st.write("Sorry, there was a problem with the request.")
 
-def list_tasks():
-    if st.button("List Tasks"):
-        response = task_manager.list_tasks()
-        st.text(response)
-
-def use_voice_recognition():
-    if st.button("Start Voice Recognition"):
-        text = stt.speech_to_text()
-        st.write(f"Recognized Text: {text}")
-        if text:
-            tts.text_to_speech(text)
-            
 def main():
-    st.title("Smart Personal Assistant")
-    
-    # Sidebar for navigation
     st.sidebar.title("Navigation")
-    option = st.sidebar.selectbox("Choose an action:", ["Add Task", "List Tasks", "Voice Recognition"])
-    
-    if option == "Add Task":
-        add_task()
-    elif option == "List Tasks":
-        list_tasks()
+    option = st.sidebar.radio("Select Page", ("Todo", "Voice Recognition"))
+
+    if option == "Todo":
+        st.title("Todo Page")
+
+        # Input for task name
+        task_name = st.text_input("Enter task name", key="task_input")
+
+        # Buttons
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Add Task"):
+                add_task(task_name)
+        with col2:
+            if st.button("List Tasks"):
+                list_tasks()
+        with col3:
+            if st.button("Clear Todo List"):
+                clear_tasks()
+
     elif option == "Voice Recognition":
-        use_voice_recognition()
+        voice_recognition()
 
 if __name__ == "__main__":
     main()
