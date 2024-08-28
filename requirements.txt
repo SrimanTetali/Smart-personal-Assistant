@@ -1,0 +1,6 @@
+streamlit
+spacy
+nltk
+speechrecognition
+gtts
+mpg321
